@@ -77,8 +77,8 @@ export const FieldLibrary: React.FC<FieldLibraryProps> = ({
       <div className="p-3.5 border-b border-zinc-200">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded bg-zinc-100 text-zinc-700 flex items-center justify-center border border-zinc-200">
-              <Sliders className="w-3 h-3 text-zinc-600" />
+            <div className="w-5 h-5 rounded bg-[#FF7A59]/10 text-[#FF7A59] flex items-center justify-center border border-[#FF7A59]/25">
+              <Sliders className="w-3 h-3 text-[#FF7A59]" />
             </div>
             <h2 className="text-xs uppercase tracking-wider font-bold text-zinc-800">
               Field Library

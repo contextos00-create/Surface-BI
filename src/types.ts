@@ -34,7 +34,11 @@ export type StandardChartType =
   | 'area'
   | 'scatter'
   | 'donut'
-  | 'radar';
+  | 'radar'
+  | 'pie'
+  | 'composed';
+
+export type ChartThemeId = 'ocean' | 'coral' | 'emerald' | 'sunset' | 'monochrome' | 'cyber';
 
 export type WildVisualizerType =
   | 'cosmic_orbit'

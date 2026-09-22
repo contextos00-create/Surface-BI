@@ -13,6 +13,7 @@ import {
   CustomVariable,
   SlotField,
   Field,
+  ChartThemeId,
 } from './types';
 import {
   INITIAL_DATASETS,
@@ -39,6 +40,8 @@ export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
   const [viewMode, setViewMode] = useState<AppViewMode>(initialViewMode);
   const [slotMode, setSlotMode] = useState<'standard' | 'user_defined'>('standard');
   const [chartType, setChartType] = useState<StandardChartType>('bar');
+  const [displayTab, setDisplayTab] = useState<'visual' | 'table'>('visual');
+  const [colorTheme, setColorTheme] = useState<ChartThemeId>('ocean');
   const [isRealtimeSync, setIsRealtimeSync] = useState<boolean>(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [isHapticsEnabled, setIsHapticsEnabled] = useState<boolean>(true);
@@ -247,6 +250,8 @@ export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
         onFileUpload={handleFileUpload}
         viewMode={viewMode}
         onToggleViewMode={setViewMode}
+        activeDisplayTab={displayTab}
+        onChangeDisplayTab={setDisplayTab}
         isRealtimeSync={isRealtimeSync}
         onToggleRealtimeSync={() => setIsRealtimeSync(!isRealtimeSync)}
         isDarkMode={isDarkMode}
@@ -321,6 +326,10 @@ export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
               onChangeChartType={setChartType}
               isDarkMode={isDarkMode}
               totalRowCount={currentDataset.data.length}
+              activeTab={displayTab}
+              onChangeTab={setDisplayTab}
+              colorTheme={colorTheme}
+              onChangeColorTheme={setColorTheme}
             />
           ) : (
             <BananasWildStudio
@@ -340,7 +349,7 @@ export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
           Contains toggle button for User Defined Variable Slots
         */}
         <section
-          className={`w-full lg:w-72 xl:w-80 shrink-0 h-[calc(100vh-53px)] border-l border-zinc-200 bg-white flex flex-col overflow-hidden ${
+          className={`w-full lg:w-64 xl:w-72 2xl:w-80 shrink-0 h-[calc(100vh-53px)] border-l border-zinc-200 bg-white flex flex-col overflow-hidden ${
             mobileActivePanel !== 'slots' ? 'hidden lg:flex' : 'flex'
           }`}
         >
@@ -362,7 +371,7 @@ export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
           3. LIST OF FIELDS ON RIGHT SIDE
         */}
         <aside
-          className={`w-full lg:w-72 xl:w-80 shrink-0 h-[calc(100vh-53px)] border-l border-zinc-200 bg-white flex flex-col overflow-hidden ${
+          className={`w-full lg:w-64 xl:w-72 2xl:w-80 shrink-0 h-[calc(100vh-53px)] border-l border-zinc-200 bg-white flex flex-col overflow-hidden ${
             mobileActivePanel !== 'fields' ? 'hidden lg:flex' : 'flex'
           }`}
         >

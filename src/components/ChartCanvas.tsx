@@ -16,6 +16,7 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
+  ComposedChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,12 +25,10 @@ import {
   ResponsiveContainer,
   ZAxis,
 } from 'recharts';
-import { StandardChartType, StandardSlots } from '../types';
+import { StandardChartType, StandardSlots, ChartThemeId } from '../types';
 import { haptics } from '../utils/haptics';
-import {
-  BarChart3,
-  Table,
-} from 'lucide-react';
+import { CHART_THEMES } from '../data/themes';
+import { Palette, Check } from 'lucide-react';
 
 interface ChartCanvasProps {
   chartData: any[];
@@ -40,19 +39,11 @@ interface ChartCanvasProps {
   onChangeChartType: (type: StandardChartType) => void;
   isDarkMode: boolean;
   totalRowCount: number;
+  activeTab?: 'visual' | 'table';
+  onChangeTab?: (tab: 'visual' | 'table') => void;
+  colorTheme?: ChartThemeId;
+  onChangeColorTheme?: (theme: ChartThemeId) => void;
 }
-
-// Refined, high-contrast, professional BI chart palette
-const CHART_PALETTE = [
-  '#2563EB', // Royal Blue
-  '#0D9488', // Deep Teal
-  '#6366F1', // Indigo
-  '#F59E0B', // Amber
-  '#EC4899', // Pink
-  '#8B5CF6', // Purple
-  '#10B981', // Emerald
-  '#0284C7', // Sky
-];
 
 export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   chartData,
@@ -62,10 +53,32 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   chartType,
   onChangeChartType,
   totalRowCount,
+  activeTab: propActiveTab,
+  onChangeTab: propOnChangeTab,
+  colorTheme: propColorTheme,
+  onChangeColorTheme: propOnChangeColorTheme,
 }) => {
-  const [activeTab, setActiveTab] = useState<'visual' | 'table'>('visual');
+  // Support both internal and external control for tab and color theme
+  const [internalTab, setInternalTab] = useState<'visual' | 'table'>('visual');
+  const activeTab = propActiveTab !== undefined ? propActiveTab : internalTab;
 
-  // Definitions with text descriptions on top AND miniature visual pictures underneath
+  const [internalColorTheme, setInternalColorTheme] = useState<ChartThemeId>('ocean');
+  const activeColorTheme = propColorTheme !== undefined ? propColorTheme : internalColorTheme;
+
+  const handleSelectColorTheme = (themeId: ChartThemeId) => {
+    haptics.tick();
+    if (propOnChangeColorTheme) {
+      propOnChangeColorTheme(themeId);
+    } else {
+      setInternalColorTheme(themeId);
+    }
+  };
+
+  const currentTheme =
+    CHART_THEMES.find((t) => t.id === activeColorTheme) || CHART_THEMES[0];
+  const activePalette = currentTheme.colors;
+
+  // Chart options: taller, square visual cards with miniature illustrations underneath
   const chartDefinitions: {
     id: StandardChartType;
     label: string;
@@ -73,121 +86,147 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   }[] = [
     {
       id: 'bar',
-      label: 'Clustered Bar',
+      label: 'Clustered',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Clustered Bar Chart Preview">
-          <line x1="4" y1="26" x2="50" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <rect x="7" y="12" width="5" height="14" rx="1" fill="#2563EB" />
-          <rect x="13" y="7" width="5" height="19" rx="1" fill="#18181B" />
-          <rect x="22" y="16" width="5" height="10" rx="1" fill="#2563EB" />
-          <rect x="28" y="10" width="5" height="16" rx="1" fill="#18181B" />
-          <rect x="37" y="5" width="5" height="21" rx="1" fill="#2563EB" />
-          <rect x="43" y="13" width="5" height="13" rx="1" fill="#18181B" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Clustered Bar Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <rect x="7" y="11" width="5" height="14" rx="1" fill={activePalette[0]} />
+          <rect x="13" y="6" width="5" height="19" rx="1" fill="#18181B" />
+          <rect x="22" y="15" width="5" height="10" rx="1" fill={activePalette[0]} />
+          <rect x="28" y="9" width="5" height="16" rx="1" fill="#18181B" />
+          <rect x="37" y="4" width="5" height="21" rx="1" fill={activePalette[0]} />
+          <rect x="43" y="12" width="5" height="13" rx="1" fill="#18181B" />
         </svg>
       ),
     },
     {
       id: 'stacked_bar',
-      label: 'Stacked Bar',
+      label: 'Stacked',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Stacked Bar Chart Preview">
-          <line x1="4" y1="26" x2="50" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <rect x="8" y="16" width="9" height="10" rx="1" fill="#18181B" />
-          <rect x="8" y="7" width="9" height="8" rx="1" fill="#2563EB" />
-          <rect x="22" y="14" width="9" height="12" rx="1" fill="#18181B" />
-          <rect x="22" y="4" width="9" height="9" rx="1" fill="#2563EB" />
-          <rect x="36" y="18" width="9" height="8" rx="1" fill="#18181B" />
-          <rect x="36" y="9" width="9" height="8" rx="1" fill="#2563EB" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Stacked Bar Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <rect x="8" y="15" width="9" height="10" rx="1" fill="#18181B" />
+          <rect x="8" y="6" width="9" height="8" rx="1" fill={activePalette[0]} />
+          <rect x="22" y="13" width="9" height="12" rx="1" fill="#18181B" />
+          <rect x="22" y="3" width="9" height="9" rx="1" fill={activePalette[0]} />
+          <rect x="36" y="17" width="9" height="8" rx="1" fill="#18181B" />
+          <rect x="36" y="8" width="9" height="8" rx="1" fill={activePalette[0]} />
         </svg>
       ),
     },
     {
       id: 'line',
-      label: 'Trend Line',
+      label: 'Line',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Trend Line Preview">
-          <line x1="4" y1="26" x2="50" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <path d="M 6 21 Q 18 6 30 16 T 48 5" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="6" cy="21" r="2.5" fill="#18181B" />
-          <circle cx="20" cy="11" r="2.5" fill="#18181B" />
-          <circle cx="34" cy="15" r="2.5" fill="#18181B" />
-          <circle cx="48" cy="5" r="2.5" fill="#18181B" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Trend Line Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <path d="M 6 20 Q 18 5 30 15 T 48 4" stroke={activePalette[0]} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="6" cy="20" r="2.5" fill="#18181B" />
+          <circle cx="20" cy="10" r="2.5" fill="#18181B" />
+          <circle cx="34" cy="14" r="2.5" fill="#18181B" />
+          <circle cx="48" cy="4" r="2.5" fill="#18181B" />
         </svg>
       ),
     },
     {
       id: 'area',
-      label: 'Area Spline',
+      label: 'Area',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Area Spline Preview">
-          <line x1="4" y1="26" x2="50" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <path d="M 6 22 Q 18 8 30 17 T 48 6 L 48 26 L 6 26 Z" fill="#2563EB" fillOpacity="0.2" />
-          <path d="M 6 22 Q 18 8 30 17 T 48 6" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Area Spline Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <path d="M 6 21 Q 18 7 30 16 T 48 5 L 48 25 L 6 25 Z" fill={activePalette[0]} fillOpacity="0.25" />
+          <path d="M 6 21 Q 18 7 30 16 T 48 5" stroke={activePalette[0]} strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      id: 'composed',
+      label: 'Combo',
+      renderVisualPicture: () => (
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Combo Chart Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <rect x="8" y="12" width="7" height="13" rx="1" fill="#18181B" fillOpacity="0.8" />
+          <rect x="23" y="7" width="7" height="18" rx="1" fill="#18181B" fillOpacity="0.8" />
+          <rect x="38" y="14" width="7" height="11" rx="1" fill="#18181B" fillOpacity="0.8" />
+          <path d="M 11 18 L 26 5 L 41 11" stroke={activePalette[0]} strokeWidth="2" strokeLinecap="round" />
+          <circle cx="11" cy="18" r="2" fill={activePalette[0]} />
+          <circle cx="26" cy="5" r="2" fill={activePalette[0]} />
+          <circle cx="41" cy="11" r="2" fill={activePalette[0]} />
         </svg>
       ),
     },
     {
       id: 'scatter',
-      label: 'Scatter Plot',
+      label: 'Scatter',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Scatter Plot Preview">
-          <line x1="4" y1="26" x2="50" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <line x1="4" y1="4" x2="4" y2="26" stroke="#E4E4E7" strokeWidth="1.5" />
-          <circle cx="12" cy="19" r="3" fill="#2563EB" />
-          <circle cx="19" cy="9" r="3.5" fill="#18181B" />
-          <circle cx="28" cy="21" r="2.5" fill="#2563EB" />
-          <circle cx="35" cy="7" r="4" fill="#2563EB" />
-          <circle cx="41" cy="15" r="3" fill="#18181B" />
-          <circle cx="47" cy="8" r="3" fill="#2563EB" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Scatter Plot Preview">
+          <line x1="4" y1="25" x2="50" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <line x1="4" y1="3" x2="4" y2="25" stroke="#E4E4E7" strokeWidth="1.5" />
+          <circle cx="12" cy="18" r="3" fill={activePalette[0]} />
+          <circle cx="19" cy="8" r="3.5" fill="#18181B" />
+          <circle cx="28" cy="20" r="2.5" fill={activePalette[0]} />
+          <circle cx="35" cy="6" r="4" fill={activePalette[0]} />
+          <circle cx="41" cy="14" r="3" fill="#18181B" />
+          <circle cx="47" cy="7" r="3" fill={activePalette[0]} />
         </svg>
       ),
     },
     {
       id: 'donut',
-      label: 'Donut / Pie',
+      label: 'Donut',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Donut Chart Preview">
-          <circle cx="27" cy="15" r="11" stroke="#E4E4E7" strokeWidth="5" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Donut Chart Preview">
+          <circle cx="27" cy="14" r="10" stroke="#E4E4E7" strokeWidth="4.5" />
           <circle
             cx="27"
-            cy="15"
-            r="11"
-            stroke="#2563EB"
-            strokeWidth="5"
-            strokeDasharray="36 40"
-            strokeDashoffset="8"
+            cy="14"
+            r="10"
+            stroke={activePalette[0]}
+            strokeWidth="4.5"
+            strokeDasharray="33 38"
+            strokeDashoffset="7"
           />
           <circle
             cx="27"
-            cy="15"
-            r="11"
+            cy="14"
+            r="10"
             stroke="#18181B"
-            strokeWidth="5"
-            strokeDasharray="22 54"
-            strokeDashoffset="-28"
+            strokeWidth="4.5"
+            strokeDasharray="20 50"
+            strokeDashoffset="-26"
           />
         </svg>
       ),
     },
     {
-      id: 'radar',
-      label: 'Radar Axis',
+      id: 'pie',
+      label: 'Pie',
       renderVisualPicture: () => (
-        <svg viewBox="0 0 54 30" className="w-full h-7" fill="none" aria-label="Radar Axis Preview">
-          <polygon points="27,3 45,11 39,26 15,26 9,11" stroke="#E4E4E7" strokeWidth="1" />
-          <polygon points="27,8 40,14 35,23 19,23 14,14" stroke="#E4E4E7" strokeWidth="1" />
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Pie Chart Preview">
+          <circle cx="27" cy="14" r="11" fill={activePalette[0]} />
+          <path d="M 27 14 L 27 3 A 11 11 0 0 1 38 14 Z" fill="#18181B" />
+          <path d="M 27 14 L 38 14 A 11 11 0 0 1 31 24.5 Z" fill={activePalette[1] || '#0D9488'} />
+        </svg>
+      ),
+    },
+    {
+      id: 'radar',
+      label: 'Radar',
+      renderVisualPicture: () => (
+        <svg viewBox="0 0 54 28" className="w-full h-6.5" fill="none" aria-label="Radar Axis Preview">
+          <polygon points="27,2 44,10 38,24 16,24 10,10" stroke="#E4E4E7" strokeWidth="1" />
           <polygon
-            points="27,5 42,12 36,25 18,22 12,13"
-            fill="#2563EB"
-            fillOpacity="0.2"
-            stroke="#2563EB"
+            points="27,4 41,11 35,23 18,20 12,12"
+            fill={activePalette[0]}
+            fillOpacity="0.25"
+            stroke={activePalette[0]}
             strokeWidth="1.5"
           />
-          <circle cx="27" cy="5" r="2" fill="#18181B" />
-          <circle cx="42" cy="12" r="2" fill="#18181B" />
-          <circle cx="36" cy="25" r="2" fill="#18181B" />
-          <circle cx="18" cy="22" r="2" fill="#18181B" />
-          <circle cx="12" cy="13" r="2" fill="#18181B" />
+          <circle cx="27" cy="4" r="2" fill="#18181B" />
+          <circle cx="41" cy="11" r="2" fill="#18181B" />
+          <circle cx="35" cy="23" r="2" fill="#18181B" />
+          <circle cx="18" cy="20" r="2" fill="#18181B" />
+          <circle cx="12" cy="12" r="2" fill="#18181B" />
         </svg>
       ),
     },
@@ -213,27 +252,27 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   );
 
   const gridStroke = '#F4F4F5';
-  const textFill = '#52525B';
+  const textFill = '#71717A';
 
-  // Custom tooltip
+  // Custom high-contrast tooltip
   const CustomChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-zinc-200 rounded-lg p-2.5 shadow-xl text-xs z-50">
+        <div className="bg-white border border-zinc-200 rounded-xl p-2.5 shadow-xl text-xs z-50 min-w-[140px]">
           <p className="font-bold text-zinc-900 mb-1 border-b border-zinc-100 pb-1">
             {label || payload[0]?.payload?.x}
           </p>
           <div className="space-y-1">
             {payload.map((entry: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between gap-4 text-zinc-800">
-                <span className="flex items-center gap-1.5 font-medium text-zinc-600">
+              <div key={idx} className="flex items-center justify-between gap-3 text-zinc-800">
+                <span className="flex items-center gap-1.5 font-medium text-zinc-600 truncate">
                   <span
-                    className="w-2.5 h-2.5 rounded-full inline-block"
+                    className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
                     style={{ backgroundColor: entry.color || entry.fill }}
                   />
-                  {entry.name}:
+                  <span className="truncate">{entry.name}:</span>
                 </span>
-                <span className="font-bold text-zinc-900">
+                <span className="font-bold text-zinc-900 shrink-0">
                   {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
                 </span>
               </div>
@@ -246,54 +285,15 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-white p-3 sm:p-5 overflow-y-auto">
-      {/* Chart Visual Selection Gallery with Small Pictures Underneath Text Description */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase font-bold tracking-wider text-zinc-800">
-              Select Chart Visual
-            </span>
-            <span className="text-[11px] text-zinc-400 hidden sm:inline">
-              Click visual template to render
-            </span>
-          </div>
-
-          {/* Switch: Visual vs Data Table */}
-          <div className="flex items-center p-0.5 rounded-lg bg-zinc-100 border border-zinc-200">
-            <button
-              onClick={() => {
-                haptics.tick();
-                setActiveTab('visual');
-              }}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                activeTab === 'visual'
-                  ? 'bg-white text-zinc-900 shadow-2xs font-bold border border-zinc-200/80'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span>Canvas</span>
-            </button>
-            <button
-              onClick={() => {
-                haptics.tick();
-                setActiveTab('table');
-              }}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer ${
-                activeTab === 'table'
-                  ? 'bg-white text-zinc-900 shadow-2xs font-bold border border-zinc-200/80'
-                  : 'text-zinc-500 hover:text-zinc-800'
-              }`}
-            >
-              <Table className="w-3.5 h-3.5" />
-              <span>Data Grid</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Visual Cards Grid: Text description on top, visual picture underneath */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+    <div className="flex-1 flex flex-col h-full bg-white p-2.5 sm:p-4 md:p-5 overflow-y-auto min-w-0">
+      {/*
+        Top Header Strip of Graph Display:
+        1. Taller, square chart buttons allowing more to be populated up top
+        2. Theme / color selector tile system in upper right hand corner in line with chart cards
+      */}
+      <div className="mb-3 sm:mb-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 sm:gap-3 border-b border-zinc-100 pb-3">
+        {/* Left: Taller, Square Chart Visual Buttons */}
+        <div className="flex-1 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 no-scrollbar scrollbar-thin">
           {chartDefinitions.map((cd) => {
             const isSelected = chartType === cd.id;
             return (
@@ -303,36 +303,83 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   haptics.tick();
                   onChangeChartType(cd.id);
                 }}
-                className={`flex flex-col items-center justify-between p-2 rounded-xl border text-center transition-all cursor-pointer group ${
+                title={`Switch to ${cd.label} visual`}
+                className={`w-[74px] h-[74px] sm:w-[82px] sm:h-[82px] shrink-0 aspect-square p-1.5 rounded-xl border flex flex-col items-center justify-between text-center transition-all cursor-pointer group ${
                   isSelected
-                    ? 'border-zinc-900 bg-zinc-50/80 shadow-xs ring-1 ring-zinc-900'
-                    : 'border-zinc-200 bg-white hover:border-zinc-400 hover:bg-zinc-50/50'
+                    ? 'border-zinc-900 bg-zinc-50/90 shadow-2xs ring-1.5 ring-zinc-900'
+                    : 'border-zinc-200 bg-white hover:border-zinc-400 hover:bg-zinc-50/60'
                 }`}
               >
-                {/* 1. Text Description */}
+                {/* Visual Picture */}
+                <div className="w-full flex-1 flex items-center justify-center pt-0.5">
+                  {cd.renderVisualPicture()}
+                </div>
+
+                {/* Text Description */}
                 <span
-                  className={`text-[11px] font-bold tracking-tight mb-1.5 truncate w-full ${
-                    isSelected ? 'text-zinc-900' : 'text-zinc-700'
+                  className={`text-[10px] sm:text-[11px] font-bold tracking-tight truncate w-full mt-1 ${
+                    isSelected ? 'text-zinc-900 font-extrabold' : 'text-zinc-600'
                   }`}
                 >
                   {cd.label}
                 </span>
-
-                {/* 2. Visual Picture Underneath */}
-                <div className="w-full flex items-center justify-center pt-0.5">
-                  {cd.renderVisualPicture()}
-                </div>
               </button>
             );
           })}
         </div>
+
+        {/* Right: Theme / Color Selector Tile System in upper right hand corner */}
+        <div className="shrink-0 flex items-center gap-2 pl-0 md:pl-3 md:border-l md:border-zinc-200 justify-between md:justify-end">
+          <div className="flex items-center gap-1.5 text-zinc-500">
+            <Palette className="w-3.5 h-3.5 text-zinc-600" />
+            <span className="text-[11px] uppercase tracking-wider font-bold text-zinc-700 hidden sm:inline">
+              Palette
+            </span>
+          </div>
+
+          {/* Theme Swatch Tiles */}
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-zinc-100/80 border border-zinc-200">
+            {CHART_THEMES.map((theme) => {
+              const isCurrent = activeColorTheme === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => handleSelectColorTheme(theme.id)}
+                  title={`${theme.name}: ${theme.description}`}
+                  className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-lg border transition-all flex items-center justify-center cursor-pointer ${
+                    isCurrent
+                      ? 'bg-white border-zinc-900 ring-2 ring-zinc-900/90 shadow-2xs scale-105 z-10'
+                      : 'bg-white/80 border-transparent hover:border-zinc-300 hover:scale-102'
+                  }`}
+                >
+                  {/* Miniature Triple Color Bar Preview */}
+                  <div className="flex gap-0.5 h-3.5 w-4 rounded-xs overflow-hidden">
+                    {theme.previewColors.map((col, idx) => (
+                      <span
+                        key={idx}
+                        className="flex-1 h-full inline-block"
+                        style={{ backgroundColor: col }}
+                      />
+                    ))}
+                  </div>
+
+                  {isCurrent && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-zinc-900 text-white flex items-center justify-center">
+                      <Check className="w-2 h-2 stroke-[3]" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* KPI Metric Summary Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-        <div className="bg-white border border-zinc-200 rounded-xl p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-zinc-400">Total Aggregate</p>
-          <p className="text-xl font-bold text-zinc-900 mt-0.5">
+      {/* KPI Metric Summary Strip (Scales Responsively) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div className="bg-white border border-zinc-200 rounded-xl p-2.5 sm:p-3 shadow-2xs min-w-0">
+          <p className="text-[10px] uppercase font-bold text-zinc-400 truncate">Total Aggregate</p>
+          <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5 truncate">
             {totalSum > 1000
               ? totalSum.toLocaleString(undefined, { maximumFractionDigits: 1 })
               : totalSum.toFixed(2)}
@@ -342,40 +389,40 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
           </p>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-xl p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-zinc-400">Top Category</p>
-          <p className="text-xl font-bold text-zinc-900 mt-0.5 truncate">{peakRow.x}</p>
+        <div className="bg-white border border-zinc-200 rounded-xl p-2.5 sm:p-3 shadow-2xs min-w-0">
+          <p className="text-[10px] uppercase font-bold text-zinc-400 truncate">Top Category</p>
+          <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5 truncate">{peakRow.x}</p>
           <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">
             Peak: {peakRow.val.toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-xl p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-zinc-400">Categories</p>
-          <p className="text-xl font-bold text-zinc-900 mt-0.5">{chartData.length}</p>
-          <p className="text-[10px] text-zinc-500 font-medium mt-0.5">
+        <div className="bg-white border border-zinc-200 rounded-xl p-2.5 sm:p-3 shadow-2xs min-w-0">
+          <p className="text-[10px] uppercase font-bold text-zinc-400 truncate">Categories</p>
+          <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5 truncate">{chartData.length}</p>
+          <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">
             from {totalRowCount} raw records
           </p>
         </div>
 
-        <div className="bg-white border border-zinc-200 rounded-xl p-3 shadow-2xs">
-          <p className="text-[10px] uppercase font-bold text-zinc-400">Series Breakdown</p>
-          <p className="text-xl font-bold text-zinc-900 mt-0.5 truncate">
+        <div className="bg-white border border-zinc-200 rounded-xl p-2.5 sm:p-3 shadow-2xs min-w-0">
+          <p className="text-[10px] uppercase font-bold text-zinc-400 truncate">Series Breakdown</p>
+          <p className="text-lg sm:text-xl font-bold text-zinc-900 mt-0.5 truncate">
             {slots.legend ? slots.legend.field.name : 'Single Series'}
           </p>
-          <p className="text-[10px] text-zinc-500 font-medium mt-0.5">
+          <p className="text-[10px] text-zinc-500 font-medium truncate mt-0.5">
             {legendKeys.length} series plotted
           </p>
         </div>
       </div>
 
-      {/* Main Chart Canvas Area */}
-      <div className="flex-1 bg-white border border-zinc-200 rounded-2xl p-4 sm:p-6 shadow-2xs flex flex-col min-h-[420px]">
+      {/* Main Chart Canvas Stage (Dynamic & ResponsiveContainer) */}
+      <div className="flex-1 bg-white border border-zinc-200 rounded-2xl p-3 sm:p-5 md:p-6 shadow-2xs flex flex-col min-h-[380px] sm:min-h-[440px] min-w-0">
         {activeTab === 'visual' ? (
-          <div className="flex-1 w-full h-[400px] sm:h-[480px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 w-full h-full min-h-[340px] sm:min-h-[400px]">
+            <ResponsiveContainer width="100%" height="100%" debounce={30}>
               {chartType === 'bar' ? (
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                <BarChart data={chartData} margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                   <XAxis
                     dataKey="x"
@@ -389,18 +436,18 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   />
                   <YAxis stroke={textFill} fontSize={11} fontWeight={500} tickLine={false} />
                   <Tooltip content={<CustomChartTooltip />} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: '500' }} />
+                  <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px', fontWeight: '500' }} />
                   {legendKeys.map((key, idx) => (
                     <Bar
                       key={key}
                       dataKey={key}
-                      fill={CHART_PALETTE[idx % CHART_PALETTE.length]}
+                      fill={activePalette[idx % activePalette.length]}
                       radius={[4, 4, 0, 0]}
                     />
                   ))}
                 </BarChart>
               ) : chartType === 'stacked_bar' ? (
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                <BarChart data={chartData} margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                   <XAxis
                     dataKey="x"
@@ -413,19 +460,19 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   />
                   <YAxis stroke={textFill} fontSize={11} fontWeight={500} tickLine={false} />
                   <Tooltip content={<CustomChartTooltip />} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: '500' }} />
+                  <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px', fontWeight: '500' }} />
                   {legendKeys.map((key, idx) => (
                     <Bar
                       key={key}
                       dataKey={key}
                       stackId="a"
-                      fill={CHART_PALETTE[idx % CHART_PALETTE.length]}
+                      fill={activePalette[idx % activePalette.length]}
                       radius={idx === legendKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                     />
                   ))}
                 </BarChart>
               ) : chartType === 'line' ? (
-                <LineChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                <LineChart data={chartData} margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                   <XAxis
                     dataKey="x"
@@ -438,21 +485,21 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   />
                   <YAxis stroke={textFill} fontSize={11} fontWeight={500} tickLine={false} />
                   <Tooltip content={<CustomChartTooltip />} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: '500' }} />
+                  <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px', fontWeight: '500' }} />
                   {legendKeys.map((key, idx) => (
                     <Line
                       key={key}
                       type="monotone"
                       dataKey={key}
-                      stroke={CHART_PALETTE[idx % CHART_PALETTE.length]}
+                      stroke={activePalette[idx % activePalette.length]}
                       strokeWidth={2.5}
                       dot={{ r: 3, fill: '#18181B' }}
-                      activeDot={{ r: 6, fill: CHART_PALETTE[idx % CHART_PALETTE.length] }}
+                      activeDot={{ r: 6, fill: activePalette[idx % activePalette.length] }}
                     />
                   ))}
                 </LineChart>
               ) : chartType === 'area' ? (
-                <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                <AreaChart data={chartData} margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
                   <XAxis
                     dataKey="x"
@@ -465,21 +512,57 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   />
                   <YAxis stroke={textFill} fontSize={11} fontWeight={500} tickLine={false} />
                   <Tooltip content={<CustomChartTooltip />} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: '500' }} />
+                  <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px', fontWeight: '500' }} />
                   {legendKeys.map((key, idx) => (
                     <Area
                       key={key}
                       type="monotone"
                       dataKey={key}
-                      stroke={CHART_PALETTE[idx % CHART_PALETTE.length]}
-                      fill={CHART_PALETTE[idx % CHART_PALETTE.length]}
-                      fillOpacity={0.2}
+                      stroke={activePalette[idx % activePalette.length]}
+                      fill={activePalette[idx % activePalette.length]}
+                      fillOpacity={0.25}
                       strokeWidth={2}
                     />
                   ))}
                 </AreaChart>
+              ) : chartType === 'composed' ? (
+                <ComposedChart data={chartData} margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridStroke} />
+                  <XAxis
+                    dataKey="x"
+                    stroke={textFill}
+                    fontSize={11}
+                    fontWeight={500}
+                    tickLine={false}
+                    angle={-25}
+                    textAnchor="end"
+                  />
+                  <YAxis stroke={textFill} fontSize={11} fontWeight={500} tickLine={false} />
+                  <Tooltip content={<CustomChartTooltip />} />
+                  <Legend wrapperStyle={{ paddingTop: '15px', fontSize: '11px', fontWeight: '500' }} />
+                  {legendKeys.map((key, idx) => {
+                    const isLine = idx % 2 === 1;
+                    return isLine ? (
+                      <Line
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={activePalette[idx % activePalette.length]}
+                        strokeWidth={2.5}
+                        dot={{ r: 3, fill: '#18181B' }}
+                      />
+                    ) : (
+                      <Bar
+                        key={key}
+                        dataKey={key}
+                        fill={activePalette[idx % activePalette.length]}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    );
+                  })}
+                </ComposedChart>
               ) : chartType === 'scatter' ? (
-                <ScatterChart margin={{ top: 20, right: 30, left: 10, bottom: 40 }}>
+                <ScatterChart margin={{ top: 15, right: 20, left: 5, bottom: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                   <XAxis
                     dataKey="x"
@@ -501,29 +584,51 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   <Scatter
                     name={yFieldLabel}
                     data={chartData}
-                    fill="#2563EB"
-                    stroke="#1D4ED8"
+                    fill={activePalette[0]}
+                    stroke="#18181B"
                     strokeWidth={1}
                   />
                 </ScatterChart>
               ) : chartType === 'donut' ? (
                 <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                   <Tooltip content={<CustomChartTooltip />} />
-                  <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px', fontWeight: '500' }} />
+                  <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '11px', fontWeight: '500' }} />
                   <Pie
                     data={chartData}
                     dataKey="value"
                     nameKey="x"
                     cx="50%"
                     cy="50%"
-                    innerRadius={70}
-                    outerRadius={120}
+                    innerRadius={65}
+                    outerRadius={115}
                     paddingAngle={3}
                   >
                     {chartData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={CHART_PALETTE[index % CHART_PALETTE.length]}
+                        fill={activePalette[index % activePalette.length]}
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              ) : chartType === 'pie' ? (
+                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                  <Tooltip content={<CustomChartTooltip />} />
+                  <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '11px', fontWeight: '500' }} />
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="x"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={0}
+                    outerRadius={115}
+                    paddingAngle={1}
+                  >
+                    {chartData.map((_, index) => (
+                      <Cell
+                        key={`pie-cell-${index}`}
+                        fill={activePalette[index % activePalette.length]}
                       />
                     ))}
                   </Pie>
@@ -532,9 +637,9 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                 <RadarChart
                   cx="50%"
                   cy="50%"
-                  outerRadius={110}
+                  outerRadius={105}
                   data={chartData.slice(0, 8)}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  margin={{ top: 15, right: 25, left: 15, bottom: 15 }}
                 >
                   <PolarGrid stroke={gridStroke} />
                   <PolarAngleAxis dataKey="x" stroke={textFill} fontSize={11} />
@@ -543,9 +648,9 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                   <Radar
                     name={yFieldLabel}
                     dataKey="value"
-                    stroke="#2563EB"
-                    fill="#2563EB"
-                    fillOpacity={0.25}
+                    stroke={activePalette[0]}
+                    fill={activePalette[0]}
+                    fillOpacity={0.3}
                   />
                 </RadarChart>
               )}

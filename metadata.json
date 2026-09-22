@@ -1,6 +1,6 @@
 {
-  "name": "PowerFlow BI Studio",
-  "description": "Power BI-style drag-and-drop analytics dashboard with assignable XY & Legend slots, custom variable studio, wild interactive visualizations, real-time data sync, and tactile haptics.",
+  "name": "ContextOS",
+  "description": "ContextOS analytics studio with assignable XY & Legend slots, custom variable studio, wild interactive visualizations, real-time data sync, and tactile haptics.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
