@@ -29,10 +29,14 @@ import { BananasWildStudio } from './components/BananasWildStudio';
 import { CustomVariableBuilder } from './components/CustomVariableBuilder';
 import { BarChart3, Sliders, Database, Sparkles } from 'lucide-react';
 
-export default function App() {
+export interface AppProps {
+  initialViewMode?: AppViewMode;
+}
+
+export default function App({ initialViewMode = 'standard' }: AppProps = {}) {
   const [allDatasets, setAllDatasets] = useState<Dataset[]>(INITIAL_DATASETS);
   const [currentDataset, setCurrentDataset] = useState<Dataset>(INITIAL_DATASETS[0]);
-  const [viewMode, setViewMode] = useState<AppViewMode>('standard');
+  const [viewMode, setViewMode] = useState<AppViewMode>(initialViewMode);
   const [slotMode, setSlotMode] = useState<'standard' | 'user_defined'>('standard');
   const [chartType, setChartType] = useState<StandardChartType>('bar');
   const [isRealtimeSync, setIsRealtimeSync] = useState<boolean>(true);

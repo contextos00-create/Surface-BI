@@ -10,9 +10,13 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-router": "^1.170.38",
     "@types/d3": "^7.4.3",
     "@vitejs/plugin-react": "^6.1.1",
     "d3": "^7.9.0",
